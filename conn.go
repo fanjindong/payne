@@ -1,7 +1,6 @@
 package payne
 
 import (
-	"context"
 	"github.com/fanjindong/payne/codec"
 	"github.com/fanjindong/payne/msg"
 	"net"
@@ -9,64 +8,76 @@ import (
 
 type IConn interface {
 	Start()
-	Send(msg.IMsg) error
-	Receive() (msg.IMsg, error)
+	Send(msg.IMsg)
+	Receive() msg.IMsg
 	Close()
 }
 
 type Conn struct {
 	c      net.Conn
 	codec  codec.ICodec
-	router IRouter
+	worker IWorker
+	close  chan bool
+
+	sendQ chan msg.IMsg
 }
 
-func NewConn(c net.Conn, r IRouter) *Conn {
-	return &Conn{c: c, codec: &codec.TlvCodec{}, router: r}
+func NewConn(c net.Conn, codec codec.ICodec, w IWorker) *Conn {
+	return &Conn{c: c, codec: codec, worker: w, close: make(chan bool), sendQ: make(chan msg.IMsg, 1)}
 }
 
 func (c Conn) Start() {
+	go c.send()
+	go c.receive()
+}
+
+func (c Conn) Send(m msg.IMsg) {
+	c.sendQ <- m
+}
+
+func (c Conn) send() {
 	for {
-		m, err := c.Receive()
-		if err != nil {
+		select {
+		case <-c.close:
 			break
-		}
-		reply, err := c.router[m.GetTag()](context.Background(), NewRequest(c, m))
-		if err != nil {
-			panic(err)
-		}
-		if err = c.Send(reply); err != nil {
-			panic(err)
+		case m := <-c.sendQ:
+			if m == nil {
+				continue
+			}
+			data, err := c.codec.Encode(m)
+			if err != nil {
+				continue
+			}
+			if _, err = c.c.Write(data); err != nil {
+				c.Close()
+				return
+			}
 		}
 	}
-	return
 }
 
-func (c Conn) Send(m msg.IMsg) error {
-	data, err := c.codec.Encode(m)
-	if err != nil {
-		return err
-	}
-	_, err = c.c.Write(data)
-	return err
+func (c Conn) Receive() msg.IMsg {
+	return nil
 }
 
-func (c Conn) send(m msg.IMsg) error {
-	data, err := c.codec.Encode(m)
-	if err != nil {
-		return err
+func (c Conn) receive() {
+	for {
+		select {
+		case <-c.close:
+			return
+		default:
+			data, err := c.codec.Decode(c.c)
+			if err != nil {
+				c.Close()
+				return
+			}
+			c.worker.Do(c, data)
+		}
 	}
-	_, err = c.c.Write(data)
-	return err
-}
-
-func (c Conn) Receive() (msg.IMsg, error) {
-	data, err := c.codec.Decode(c.c)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }
 
 func (c Conn) Close() {
+	close(c.close)
+	close(c.sendQ)
 	c.c.Close()
 }

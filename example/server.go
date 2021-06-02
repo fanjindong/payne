@@ -20,7 +20,8 @@ const (
 	Ping msg.Tag = iota
 )
 
-func PingHandler(ctx context.Context, req payne.IRequest) (payne.IReply, error) {
+func PingHandler(ctx context.Context, req payne.IRequest) error {
 	text := string(req.GetData())
-	return payne.NewReply(req.GetConn(), msg.NewMsg(Ping, []byte("是的，"+text))), nil
+	req.GetConn().Send(msg.NewMsg(Ping, []byte("是的，"+text)))
+	return nil
 }

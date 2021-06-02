@@ -1,6 +1,7 @@
 package payne
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -17,6 +18,7 @@ type TcpServer struct {
 	port     int
 	listener net.Listener
 	option   *Option
+	w        IWorker
 }
 
 func NewTcpServer(ops ...IOption) *TcpServer {
@@ -29,32 +31,39 @@ func NewTcpServer(ops ...IOption) *TcpServer {
 }
 
 func (s *TcpServer) Start() error {
-	l, err := net.Listen("tcp", ":8888")
+	var err error
+	s.listener, err = net.Listen("tcp", ":8888")
 	if err != nil {
 		return err
 	}
-	s.listener = l
-	defer s.Stop()
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
 
 	fmt.Println("server start")
 	exit := make(chan os.Signal)
 	signal.Notify(exit, os.Interrupt, os.Kill)
 
+	s.w = NewWorker(s.option.router)
+	s.w.Start(ctx)
+
 	go func() {
 		for {
-			c, err := l.Accept()
+			c, err := s.listener.Accept()
 			if err != nil {
 				continue
 			}
-			go NewConn(c, s.option.router).Start()
+			NewConn(c, s.option.codec, s.w).Start()
 		}
 	}()
-
+	defer s.Stop()
 	<-exit
 	return nil
 }
 
 func (s TcpServer) Stop() error {
 	fmt.Println("server stop")
-	return s.listener.Close()
+	s.listener.Close()
+	fmt.Println(s.w)
+	s.w.Close()
+	return nil
 }

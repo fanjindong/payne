@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -36,7 +35,7 @@ func main() {
 		if _, err = conn.Write(data); err != nil {
 			panic(err)
 		}
-		time.Sleep(1 * time.Second)
+		//time.Sleep(500 * time.Millisecond)
 	}
 }
 

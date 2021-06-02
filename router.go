@@ -5,7 +5,7 @@ import (
 	"github.com/fanjindong/payne/msg"
 )
 
-type Handler func(context.Context, IRequest) (IReply, error)
+type Handler func(context.Context, IRequest) error
 
 type IRouter map[msg.Tag]Handler
 
