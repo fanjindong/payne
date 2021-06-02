@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/fanjindong/payne/codec"
+	codec2 "github.com/fanjindong/payne/codec"
 	"github.com/fanjindong/payne/msg"
 	"net"
 	"os"
@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	codec := codec.TlvCodec{}
+	codec := codec2.TlvCodec{}
 	go func() {
 		for {
 			m, err := codec.Decode(conn)

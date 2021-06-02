@@ -1,6 +1,7 @@
-package conn
+package payne
 
 import (
+	"context"
 	"github.com/fanjindong/payne/codec"
 	"github.com/fanjindong/payne/msg"
 	"net"
@@ -14,38 +15,42 @@ type IConn interface {
 }
 
 type Conn struct {
-	c     net.Conn
-	codec codec.ICodec
-	req   chan msg.IMsg
-	reply chan msg.IMsg
+	c      net.Conn
+	codec  codec.ICodec
+	router IRouter
 }
 
-func NewConn(c net.Conn) *Conn {
-	return &Conn{c: c, codec: &codec.TlvCodec{}}
+func NewConn(c net.Conn, r IRouter) *Conn {
+	return &Conn{c: c, codec: &codec.TlvCodec{}, router: r}
 }
 
 func (c Conn) Start() {
-	go func() {
-		for {
-			m, err := c.Receive()
-			if err != nil {
-				break
-			}
-			c.req <- m
+	for {
+		m, err := c.Receive()
+		if err != nil {
+			break
 		}
-	}()
-	go func() {
-		for {
-			m := <-c.reply
-			if err := c.Send(m); err != nil {
-				break
-			}
+		reply, err := c.router[m.GetTag()](context.Background(), NewRequest(c, m))
+		if err != nil {
+			panic(err)
 		}
-	}()
+		if err = c.Send(reply); err != nil {
+			panic(err)
+		}
+	}
 	return
 }
 
 func (c Conn) Send(m msg.IMsg) error {
+	data, err := c.codec.Encode(m)
+	if err != nil {
+		return err
+	}
+	_, err = c.c.Write(data)
+	return err
+}
+
+func (c Conn) send(m msg.IMsg) error {
 	data, err := c.codec.Encode(m)
 	if err != nil {
 		return err

@@ -46,8 +46,12 @@ func (c TlvCodec) Decode(reader io.Reader) (msg.IMsg, error) {
 		tag    uint8
 		length uint8
 	)
-	binary.Read(reader, binary.BigEndian, &tag)
-	binary.Read(reader, binary.BigEndian, &length)
+	if err := binary.Read(reader, binary.BigEndian, &tag); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(reader, binary.BigEndian, &length); err != nil {
+		return nil, err
+	}
 	data := make([]byte, length)
 	if length > 0 {
 		if _, err := reader.Read(data); err != nil {
