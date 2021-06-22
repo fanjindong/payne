@@ -15,10 +15,6 @@ func main() {
 	}
 }
 
-const (
-	Ping msg.Tag = iota
-)
-
 type PingRouter struct {
 }
 
@@ -28,7 +24,7 @@ func (p PingRouter) Before(ctx context.Context, request payne.IRequest) error {
 
 func (p PingRouter) Handler(ctx context.Context, request payne.IRequest) error {
 	text := string(request.GetData())
-	request.GetConn().Send(msg.NewMsg([]byte("Pong:" + text)))
+	request.GetConn().Send(msg.NewMsg([]byte("Pong: " + text)))
 	return nil
 }
 

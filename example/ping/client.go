@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	codec2 "github.com/fanjindong/payne/codec"
+	"github.com/fanjindong/payne/codec"
 	"github.com/fanjindong/payne/msg"
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	codec := codec2.TlvCodec{}
+	codec := codec.LvCodec{}
 	go func() {
 		for {
 			m, err := codec.Decode(conn)
@@ -23,7 +24,7 @@ func main() {
 				fmt.Sprintln("codec.Decode err:", err)
 				break
 			}
-			fmt.Println("reply: ", string(m.GetData()))
+			fmt.Println("reply:", string(m.GetData()))
 		}
 	}()
 	for {
@@ -35,7 +36,7 @@ func main() {
 		if _, err = conn.Write(data); err != nil {
 			panic(err)
 		}
-		//time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
