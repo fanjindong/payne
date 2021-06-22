@@ -17,8 +17,8 @@ func TestTlvCodec(t *testing.T) {
 		want    msg.IMsg
 		wantErr bool
 	}{
-		{name: "1", args: args{msg: msg.NewMsg(msg.Tag(0), []byte("1"))}, want: msg.NewMsg(msg.Tag(0), []byte("1"))},
-		{name: "2", args: args{msg: msg.NewMsg(msg.Tag(1), []byte("你好"))}, want: msg.NewMsg(msg.Tag(1), []byte("你好"))},
+		{name: "1", args: args{msg: msg.NewMsg([]byte("1")).SetTag(msg.Tag(0))}, want: msg.NewMsg([]byte("1")).SetTag(msg.Tag(0))},
+		{name: "2", args: args{msg: msg.NewMsg([]byte("你好")).SetTag(msg.Tag(1))}, want: msg.NewMsg([]byte("你好")).SetTag(msg.Tag(1))},
 	}
 	codec := TlvCodec{}
 	for _, tt := range tests {

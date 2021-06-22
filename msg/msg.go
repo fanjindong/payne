@@ -3,23 +3,28 @@ package msg
 type Tag uint8
 
 type IMsg interface {
-	GetTag() Tag
 	GetData() []byte
+	GetTag() Tag
 }
 
 type Msg struct {
-	tag  Tag
 	data []byte
+	tag  Tag
 }
 
-func NewMsg(tag Tag, data []byte) *Msg {
-	return &Msg{tag: tag, data: data}
-}
-
-func (m Msg) GetTag() Tag {
-	return m.tag
+func NewMsg(data []byte) *Msg {
+	return &Msg{data: data}
 }
 
 func (m Msg) GetData() []byte {
 	return m.data
+}
+
+func (m *Msg) SetTag(t Tag) *Msg {
+	m.tag = t
+	return m
+}
+
+func (m Msg) GetTag() Tag {
+	return m.tag
 }

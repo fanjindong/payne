@@ -43,7 +43,17 @@ func (w Worker) Do(c Conn, m msg.IMsg) error {
 }
 
 func (w Worker) do(req IRequest) error {
-	return w.r[req.GetTag()](context.Background(), req)
+	ctx := context.Background()
+	if err := w.r.Before(ctx, req); err != nil {
+		return err
+	}
+	if err := w.r.Handler(ctx, req); err != nil {
+		return err
+	}
+	if err := w.r.After(ctx, req); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (w Worker) Close() {

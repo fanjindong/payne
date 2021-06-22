@@ -28,7 +28,7 @@ func main() {
 	}()
 	for {
 		text := readByStd()
-		data, err := codec.Encode(msg.NewMsg(msg.Tag(0), []byte(text)))
+		data, err := codec.Encode(msg.NewMsg([]byte(text)))
 		if err != nil {
 			panic(err)
 		}

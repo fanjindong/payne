@@ -10,7 +10,7 @@ type Option struct {
 }
 
 func NewOption() *Option {
-	return &Option{codec: &codec.TlvCodec{}}
+	return &Option{codec: &codec.LvCodec{}}
 }
 
 func WithCodec(c codec.ICodec) IOption {

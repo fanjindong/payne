@@ -1,7 +1,6 @@
 package payne
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
@@ -44,7 +43,7 @@ func (s *TcpServer) Start() error {
 	signal.Notify(exit, os.Interrupt, os.Kill)
 
 	s.w = NewWorker(s.option.router)
-	s.w.Start(ctx)
+	s.w.Start()
 
 	go func() {
 		for {

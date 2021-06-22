@@ -5,9 +5,11 @@ import (
 	"github.com/fanjindong/payne/msg"
 )
 
-type Handler func(context.Context, IRequest) error
-
-type IRouter map[msg.Tag]Handler
+type IRouter interface {
+	Before(context.Context, IRequest) error
+	Handler(context.Context, IRequest) error
+	After(context.Context, IRequest) error
+}
 
 type IRequest interface {
 	GetConn() IConn
@@ -24,23 +26,5 @@ func NewRequest(conn IConn, IMsg msg.IMsg) *Request {
 }
 
 func (r Request) GetConn() IConn {
-	return r.conn
-}
-
-type IReply interface {
-	GetConn() IConn
-	msg.IMsg
-}
-
-type Reply struct {
-	conn IConn
-	msg.IMsg
-}
-
-func NewReply(conn IConn, IMsg msg.IMsg) *Reply {
-	return &Reply{conn: conn, IMsg: IMsg}
-}
-
-func (r Reply) GetConn() IConn {
 	return r.conn
 }
